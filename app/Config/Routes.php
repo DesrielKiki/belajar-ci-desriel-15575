@@ -12,3 +12,4 @@ $routes->get('logout', 'AuthController::logout');
 
 $routes->get('produk', 'ProdukController::index', ['filter' => 'auth']);
 $routes->get('keranjang', 'KeranjangController::index', ['filter' => 'auth']);
+$routes->get('profile', 'Profile::index', ['filter' => 'auth']);

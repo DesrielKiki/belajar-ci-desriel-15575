@@ -25,5 +25,12 @@
     </li><!-- End Produk Nav -->
     <?php } ?>
 
+    <li class="nav-item">
+      <a class="nav-link <?php echo (uri_string() == 'profile') ? "" : "collapsed" ?>" href="<?= base_url('profile'); ?>">
+        <i class="bi bi-person"></i>
+        <span>Profile</span>
+      </a>
+    </li><!-- End Profile Nav -->
+
   </ul>
 </aside><!-- End Sidebar-->

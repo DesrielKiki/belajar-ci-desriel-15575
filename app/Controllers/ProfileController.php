@@ -11,13 +11,13 @@ class ProfileController extends BaseController
         $session = session();
 
         $data = [
-            'username'     => $session->get('username'),
-            'role'         => $session->get('role'),
-            'email'        => $session->get('email')       ?? 'desriel7c6@gmail.com',
-            'waktu_login'  => $session->get('waktu_login') ?? date('Y-m-d H:i:s'),
-            'status_login' => $session->get('isLoggedIn')  ? 'Aktif' : 'Tidak Aktif',
+            'username' => $session->get('username'),
+            'role' => $session->get('role'),
+            'email' => $session->get('email') ?? 'desriel7c6@gmail.com',
+            'waktu_login' => $session->get('waktu_login') ?? date('Y-m-d H:i:s'),
+            'status_login' => $session->get('isLoggedIn') ? 'Aktif' : 'Tidak Aktif',
         ];
 
-        return view('profile/index', $data);
+        return view('v_profile', $data);
     }
 }

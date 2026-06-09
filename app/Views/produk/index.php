@@ -1,23 +1,35 @@
 <?= $this->extend('layout') ?>
-<?= $this->section('content') ?>
+<?= $this->section('content') ?> 
+<!-- Table with stripped rows -->
 
-<?php if (session()->getFlashData('success')) { ?>
+<?php
+if (session()->getFlashData('success')) {
+?>
     <div class="alert alert-info alert-dismissible fade show" role="alert">
         <?= session()->getFlashData('success') ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-<?php } ?>
-
-<?php if (session()->getFlashData('failed')) { ?>
+<?php
+}
+?>
+<?php
+if (session()->getFlashData('failed')) {
+?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <?= session()->getFlashData('failed') ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-<?php } ?>
-
+<?php
+}
+?>
 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
     Tambah Data
 </button>
+
+<a class="btn btn-success" target="_blank" href="<?= base_url()?>produk/download">
+    Download Data
+</a>
+
 
 <table class="table datatable">
     <thead>
@@ -44,17 +56,17 @@
                 </td>
                 <td>
                     <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editModal-<?= $produk['id'] ?>">
-                        Ubah
-                    </button>
-                    <a href="<?= base_url('produk/delete/' . $produk['id']) ?>" class="btn btn-danger" onclick="return confirm('Yakin hapus data ini ?')">
-                        Hapus
-                    </a>
+    Ubah
+</button>
+<a href="<?= base_url('produk/delete/' . $produk['id']) ?>" class="btn btn-danger" onclick="return confirm('Yakin hapus data ini ?')">
+    Hapus
+</a>
                 </td>
             </tr>
         <?php endforeach ?>
     </tbody>
 </table>
-<?= $this->include('produk/modal_add') ?>
-<?= $this->include('produk/modal_edit') ?>
-
+<!-- End Table with stripped rows --> 
+ <?= $this->include('produk/modal_add') ?>
+ <?= $this->include('produk/modal_edit') ?>
 <?= $this->endSection() ?>

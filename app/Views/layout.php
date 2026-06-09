@@ -1,4 +1,3 @@
-
 <?php
 $hlm = "Home";
 if(uri_string()!=""){
@@ -13,7 +12,7 @@ if(uri_string()!=""){
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
-  <title>- Desriel Frizky - <?php echo $hlm ?></title>
+  <title>- Toko Desriel - <?php echo $hlm ?></title>
   <meta content="" name="description">
   <meta content="" name="keywords">
 
@@ -32,7 +31,7 @@ if(uri_string()!=""){
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/quill/quill.snow.css" rel="stylesheet">
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/quill/quill.bubble.css" rel="stylesheet">
   <link href="<?= base_url()?>NiceAdmin/assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-  <link href="<?= base_url()?>NiceAdmin/<?= base_url()?>NiceAdmin/assets/vendor/simple-datatables/style.css" rel="stylesheet">
+  <link href="<?= base_url()?>NiceAdmin/assets/vendor/simple-datatables/style.css" rel="stylesheet">
 
   <!-- Template Main CSS File -->
   <link href="<?= base_url()?>NiceAdmin/assets/css/style.css" rel="stylesheet">

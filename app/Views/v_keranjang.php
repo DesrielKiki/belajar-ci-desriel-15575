@@ -54,5 +54,9 @@ if (session()->getFlashData('success')) {
 
 <a class="btn btn-warning" href="<?php echo base_url() ?>keranjang/clear">Kosongkan Keranjang</a>
 
+<?php if (!empty($items)) : ?>
+    <a class="btn btn-success" href="<?php echo base_url() ?>checkout">Selesai Belanja</a>
+<?php endif; ?>
+
 <?php echo form_close() ?>
 <?= $this->endSection() ?>

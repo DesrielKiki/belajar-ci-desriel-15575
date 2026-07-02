@@ -7,6 +7,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use App\Services\RajaOngkirService;
 use App\Models\TransactionModel;
 use App\Models\TransactionDetailModel;
+use App\Models\ProductModel;
 
 class TransaksiController extends BaseController
 {
@@ -14,19 +15,30 @@ class TransaksiController extends BaseController
 protected $cart;
 protected $transactionModel;
 protected $transactionDetailModel;
+protected $productModel;
 
 public function __construct()
 {
-    helper(['number', 'form']);
+    helper(['number', 'form', 'transaksi']);
     $this->cart = service('cart');
     $this->transactionModel = new TransactionModel();
     $this->transactionDetailModel = new TransactionDetailModel();
+    $this->productModel = new ProductModel();
 }
 
     public function index()
 {  
+    $items = $this->cart->contents();
+    $productIds = array_column($items, 'id');
+    $products = empty($productIds) ? [] : $this->productModel->whereIn('id', $productIds)->findAll();
+    $stokById = array_column($products, 'jumlah', 'id');
+
+    foreach ($items as $rowid => $item) {
+        $items[$rowid]['stok'] = $stokById[$item['id']] ?? 0;
+    }
+
     $data = [
-        'items' => $this->cart->contents(),
+        'items' => $items,
         'total' => $this->cart->total()  
     ];
 
@@ -35,8 +47,28 @@ public function __construct()
 
 public function cart_add()
 {
+	$productId = $this->request->getPost('id');
+	$product = $this->productModel->find($productId);
+
+	if (!$product) {
+	    return redirect()->back();
+	}
+
+	$existingQty = 0;
+	foreach ($this->cart->contents() as $item) {
+	    if ($item['id'] == $productId) {
+	        $existingQty = $item['qty'];
+	        break;
+	    }
+	}
+
+	if ($existingQty + 1 > $product['jumlah']) {
+	    session()->setFlashdata('error', 'Stok produk "' . $product['nama'] . '" tidak mencukupi.');
+	    return redirect()->back();
+	}
+
 	$this->cart->insert([
-	    'id'      => $this->request->getPost('id'),
+	    'id'      => $productId,
 	    'qty'     => 1,
 	    'price'   => $this->request->getPost('harga'),
 	    'name'    => $this->request->getPost('nama'),
@@ -54,16 +86,40 @@ public function cart_add()
 	return redirect()->to(base_url('/'));
 } 
 
-public function cart_edit()
+private function updateCartQuantitiesFromRequest(): bool
 {
     $i = 1;
+    $stokTidakCukup = false;
+
     foreach ($this->cart->contents() as $item) {
-        $qty = $this->request->getPost('qty' . $i++);
+        $qty = (int) $this->request->getPost('qty' . $i++);
+        $product = $this->productModel->find($item['id']);
+        $stok = $product['jumlah'] ?? 0;
+        $batasQty = max($stok, (int) $item['qty']);
+
+        if ($qty > $batasQty) {
+            $qty = $batasQty;
+            $stokTidakCukup = true;
+        }
 
         $this->cart->update([
             'rowid' => $item['rowid'],
             'qty'   => $qty
         ]);
+    }
+
+    return $stokTidakCukup;
+}
+
+public function cart_edit()
+{
+    $stokTidakCukup = $this->updateCartQuantitiesFromRequest();
+
+    if ($stokTidakCukup) {
+        session()->setFlashdata(
+            'error',
+            'Sebagian jumlah pembelian disesuaikan karena melebihi stok yang tersedia.'
+        );
     }
 
     session()->setFlashdata(
@@ -72,6 +128,20 @@ public function cart_edit()
     );
 
     return redirect()->to(base_url('keranjang'));
+}
+
+public function cart_checkout()
+{
+    $stokTidakCukup = $this->updateCartQuantitiesFromRequest();
+
+    if ($stokTidakCukup) {
+        session()->setFlashdata(
+            'error',
+            'Sebagian jumlah pembelian disesuaikan karena melebihi stok yang tersedia.'
+        );
+    }
+
+    return redirect()->to(base_url('checkout'));
 }
 
 public function cart_delete($rowid)
@@ -163,6 +233,16 @@ public function buy()
         return redirect()->back();
     }
 
+    foreach ($cartItems as $item) {
+        $product = $this->productModel->find($item['id']);
+        $stok = $product['jumlah'] ?? 0;
+
+        if ($item['qty'] > $stok) {
+            session()->setFlashdata('error', 'Stok produk "' . $item['name'] . '" tidak mencukupi.');
+            return redirect()->back();
+        }
+    }
+
     $db = \Config\Database::connect();
     $db->transStart();
 
@@ -172,16 +252,26 @@ public function buy()
     }
 
     $ongkir = (int) $this->request->getPost('ongkir');
+    $kuponCode = $this->request->getPost('kupon_code');
+
+    $biayaAdmin = hitung_biaya_admin($subtotal);
+    $diskonKupon = hitung_diskon_kupon($subtotal, $kuponCode);
+    $cashback = hitung_cashback($subtotal);
+
+    $totalHarga = $subtotal - $diskonKupon + $biayaAdmin + $ongkir;
 
     $transaction = [
-        'username'    => $this->request->getPost('username'),
-        'alamat'      => $this->request->getPost('alamat'),
-        'ongkir'      => $ongkir,
-        'total_harga' => $subtotal + $ongkir,
-        'status'      => 0,
+        'username'     => $this->request->getPost('username'),
+        'alamat'       => $this->request->getPost('alamat'),
+        'ongkir'       => $ongkir,
+        'total_harga'  => $totalHarga,
+        'status'       => 0,
+        'biaya_admin'  => $biayaAdmin,
+        'kupon_code'   => $kuponCode ?: null,
+        'diskon_kupon' => $diskonKupon,
+        'cashback'     => $cashback,
     ];
 
-    // insert transaction
     if (!$this->transactionModel->insert($transaction)) {
         $db->transRollback();
         return redirect()->back()->with('error', 'Gagal membuat transaksi');
@@ -189,7 +279,6 @@ public function buy()
 
     $transactionId = $this->transactionModel->getInsertID();
 
-    // insert transaction detail
     foreach ($cartItems as $item) {
         $this->transactionDetailModel->insert([
             'transaction_id' => $transactionId,
@@ -198,6 +287,10 @@ public function buy()
             'diskon'         => 0,
             'subtotal_harga' => $item['qty'] * $item['price']
         ]);
+
+        $this->productModel->set('jumlah', 'jumlah - ' . (int) $item['qty'], false)
+            ->where('id', $item['id'])
+            ->update();
     }
 
     $db->transComplete();
@@ -206,8 +299,8 @@ public function buy()
         return redirect()->back()->with('error', 'Gagal membuat transaksi');
     }
 
-    // hapus session keranjang belanja
     $this->cart->destroy();
+    session()->setFlashdata('order_success', 'Pesanan kamu berhasil dibuat dan sedang diproses.');
     return redirect()->to(base_url());
 }
 public function history()

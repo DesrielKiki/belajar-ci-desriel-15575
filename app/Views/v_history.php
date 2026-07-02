@@ -81,6 +81,15 @@ History Transaksi Pembelian <strong><?= $username ?></strong>
                             <?php endforeach; ?>
                         <?php endif; ?>
                         Ongkir <?= number_to_currency($item['ongkir'], 'IDR') ?>
+                        <hr>
+                        <?php if (!empty($item['kupon_code'])) : ?>
+                            Kode Kupon <?= $item['kupon_code'] ?><br>
+                        <?php endif; ?>
+                        Diskon Kupon -<?= number_to_currency((float) ($item['diskon_kupon'] ?? 0), 'IDR') ?><br>
+                        Biaya Admin <?= number_to_currency((float) ($item['biaya_admin'] ?? 0), 'IDR') ?><br>
+                        Cashback <?= number_to_currency((float) ($item['cashback'] ?? 0), 'IDR') ?><br>
+                        <hr>
+                        <strong>Total Bayar <?= number_to_currency($item['total_harga'], 'IDR') ?></strong>
                     </div>
                 </div>
             </div>

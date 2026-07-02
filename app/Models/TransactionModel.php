@@ -12,7 +12,7 @@ class TransactionModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true;
     protected $protectFields    = true;
-    protected $allowedFields    = ['username', 'total_harga', 'alamat', 'ongkir', 'status'];
+    protected $allowedFields    = ['username', 'total_harga', 'alamat', 'ongkir', 'status', 'biaya_admin', 'kupon_code', 'diskon_kupon', 'cashback'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
@@ -20,20 +20,17 @@ class TransactionModel extends Model
     protected array $casts = [];
     protected array $castHandlers = [];
 
-    // Dates
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
     protected $deletedField  = 'deleted_at';
 
-    // Validation
     protected $validationRules      = [];
     protected $validationMessages   = [];
     protected $skipValidation       = true;
     protected $cleanValidationRules = true;
 
-    // Callbacks
     protected $allowCallbacks = true;
     protected $beforeInsert   = [];
     protected $afterInsert    = [];
